@@ -1,0 +1,708 @@
+{% extends 'stu_home.html' %}
+{% load static %}
+{% block content %}
+
+{% comment %} First Chart {% endcomment %}
+<div class="card" id ="chart">
+  <div class="card-body">
+    <h5 class="card-title">Economic Forecast</h5>
+    <form  action="economic_forecast" method="POST" enctype="multipart/form-data>">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="input-group">
+          <!-- Scenario Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Scenario
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllScenarios">
+                  <label class="form-check-label" for="selectAllScenarios">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in scenarios %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox-scenario" type="checkbox" value="{{i.scenario}}" name="scenario" id="scenario-{{forloop.counter}}" {% if i.scenario in scenario_name %}checked{% endif %}>
+                  <label class="form-check-label" for="scenario-{{forloop.counter}}">{{i.scenario}}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+    
+          <!-- Region Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Region
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton2">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllRegions">
+                  <label class="form-check-label" for="selectAllRegions">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in region_category %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox-region" type="checkbox" value="{{i.region_category}}" name="region" id="region-category-{{forloop.counter}}" {% if i.region_category in region_name %}checked{% endif %}>
+                  <label class="form-check-label" for="region-category-{{forloop.counter}}">{{i.region_category}}</label>
+                </div>
+              </li>
+              {% endfor %}
+              <li><hr class="dropdown-divider"></li>
+              {% for i in region %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox-region" type="checkbox" value="{{i.region}}" name="region" id="region-{{forloop.counter}}" {% if i.region in region_name %}checked{% endif %}>
+                  <label class="form-check-label" for="region-{{forloop.counter}}">{{i.region}}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          
+          <!-- Year Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Year
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton3">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllYears">
+                  <label class="form-check-label" for="selectAllYears">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in labels %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox-year" type="checkbox" value="{{ i }}" name="year_first" id="year-{{ forloop.counter }}" {% if i in year_first %}checked{% endif %}>
+                  <label class="form-check-label" for="year-{{ forloop.counter }}">{{ i }}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          
+          <!-- Apply Button -->
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit">Apply</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <canvas class="m-3" id="firstchart"></canvas>
+</div>
+{% comment %} Comparison {% endcomment %}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">{{topbottom}} {{topbottomn}} countries</h5>
+          <form action="economic_forecast" id="filter-form" method="POST" enctype="multipart/form-data>">
+            {%csrf_token%}
+            <div class="form-row">
+              <div class="input-group">
+                <select class="custom-select" name ="topbottom" id="topbottom" required>
+                  <option selected disabled="true">Choose top / least</option>
+                  <option value="top" {% if topbottom == "top" %}selected{% endif %}>Top N</option>
+                  <option value="least" {% if topbottom == "least" %}selected{% endif %}>Least N</option>
+                </select>
+                <input type="number" value={{topbottomn}} name="topbottomn" class="form-control" placeholder="Enter a number in the range from 2 100" min="2" max="100" required>
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary" type="submit">submit</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <canvas id="topbottom1"></canvas>
+      </div>
+    </div>
+    <div class="col-sm">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Select an Option to compare</h5>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="option" id="option1" value="1" onclick="showForm(1)" {% if form_option == '1' %}checked{% endif %}>
+            <label class="form-check-label" for="option1">countries</label>
+            <input class="form-check-input" type="radio" name="option" id="option2" value="2" onclick="showForm(2)" {% if form_option == '2' %}checked{% endif %}>
+            <label class="form-check-label" for="option2">scenarios</label>
+            <input class="form-check-input" type="radio" name="option" id="option3" value="3" onclick="showForm(3)" {% if form_option == '3' %}checked{% endif %}>
+            <label class="form-check-label" for="option3">Years</label>
+        </div>
+    
+        <!-- Forms -->
+        <div id="form1" class="form-container">
+            <form method="POST" action="economic_forecast"> 
+                {% csrf_token %}
+                <input type="hidden" name="option" value="1">
+                <div class="form-row">
+                  <div class="input-group">
+                    <select class="custom-select" name ="region_form" id="region_form">
+                      <option selected disabled="true">Choose Region 1</option>
+                      {% for i in region %}
+                      <option value="{{i.region}}" {% if i.region == region_form %}selected{% endif %}>{{i.region}}</option>
+                      {% endfor %}
+                    </select>
+                    <select class="custom-select" name ="region_form2" id="region_form2">
+                      <option selected disabled="true">Choose Region 2</option>
+                      {% for i in region %}
+                      <option value="{{i.region}}" {% if i.region == region_form2 %}selected{% endif %}>{{i.region}}</option>
+                      {% endfor %}
+                    </select>
+                      <select class="custom-select" name ="scenario_form" id="scenario_form">
+                        <option selected disabled="true">Choose Scenario</option>
+                        {% for i in scenarios %}
+                        <option value="{{i.scenario}}" {% if i.scenario == scenario_form %}selected{% endif %}>{{i.scenario}}</option>
+                        {% endfor %}
+                      </select>
+                      <select class="custom-select" name ="year_form" id="year_form">
+                        <option selected disabled="true">Choose Year</option>
+                        {% for i in labels %}
+                        <option value="{{i}}" {% if i == year_form %}selected{% endif %}>{{i}}</option>
+                        {% endfor %}
+                      </select>
+                      <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+        </div>
+    
+        <div id="form2" class="form-container">
+          <form method="POST" action="economic_forecast"> 
+              {% csrf_token %}
+              <div class="form-row">
+                <input type="hidden" name="option" value="2">
+                <div class="input-group">
+                  <select class="custom-select" name ="scenario_form" id="scenario_form">
+                    <option selected disabled="true">Choose Scenario 1</option>
+                    {% for i in scenarios %}
+                    <option value="{{i.scenario}}" {% if i.scenario == scenario_form %}selected{% endif %}>{{i.scenario}}</option>
+                    {% endfor %}
+                  </select>
+                  <select class="custom-select" name ="scenario_form2" id="scenario_form2">
+                    <option selected disabled="true">Choose Scenario 2</option>
+                    {% for i in scenarios %}
+                    <option value="{{i.scenario}}" {% if i.scenario == scenario_form2 %}selected{% endif %}>{{i.scenario}}</option>
+                    {% endfor %}
+                  </select>
+                  <select class="custom-select" name ="region_form" id="region_form">
+                    <option selected disabled="true">Choose Region</option>
+                    {% for i in region %}
+                    <option value="{{i.region}}" {% if i.region == region_form %}selected{% endif %}>{{i.region}}</option>
+                    {% endfor %}
+                  </select>
+                    <select class="custom-select" name ="year_form" id="year_form">
+                      <option selected disabled="true">Choose Year</option>
+                      {% for i in labels %}
+                      <option value="{{i}}" {% if i == year_form %}selected{% endif %}>{{i}}</option>
+                      {% endfor %}
+                    </select>
+                    <div class="input-group-append">
+                      <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+      </div>
+      <div id="form3" class="form-container">
+        <form method="POST" action="economic_forecast"> 
+            {% csrf_token %}
+            <div class="form-row">
+              <div class="input-group">
+                <input type="hidden" name="option" value="3">
+                <select class="custom-select" name ="year_form" id="year_form">
+                  <option selected disabled="true">Choose Year 1</option>
+                  {% for i in labels %}
+                  <option value="{{i}}" {% if i == year_form %}selected{% endif %}>{{i}}</option>
+                  {% endfor %}
+                </select>
+                <select class="custom-select" name ="year_form2" id="year_form2">
+                  <option selected disabled="true">Choose Year 2</option>
+                  {% for i in labels %}
+                  <option value="{{i}}" {% if i == year_form2 %}selected{% endif %}>{{i}}</option>
+                  {% endfor %}
+                </select>
+                  <select class="custom-select" name ="scenario_form" id="scenario_form">
+                    <option selected disabled="true">Choose Scenario</option>
+                    {% for i in scenarios %}
+                    <option value="{{i.scenario}}" {% if i.scenario == scenario_form %}selected{% endif %}>{{i.scenario}}</option>
+                    {% endfor %}
+                  </select>
+                  <select class="custom-select" name ="region_form" id="region_form">
+                    <option selected disabled="true">Choose Region</option>
+                    {% for i in region %}
+                    <option value="{{i.region}}" {% if i.region == region_form %}selected{% endif %}>{{i.region}}</option>
+                    {% endfor %}
+                  </select>
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+    </div>
+  
+        </div>
+        <canvas id="comparison_chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% comment %} MAP {% endcomment %}
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Map</h5>
+    <form action="economic_forecast" id="filter-form" method="POST" enctype="multipart/form-data>">
+      {%csrf_token%}
+      <div class="form-row">
+        <div class="input-group">
+          <select class="custom-select" name ="scenario_map" id="scenario_map">
+            <option selected disabled="true">Choose Scenario</option>
+            {% for i in scenarios %}
+            <option value="{{i.scenario}}" {% if i.scenario == scenario_map %}selected{% endif %}>{{i.scenario}}</option>
+            {% endfor %}
+          </select>
+          <select class="custom-select" name ="year_map" id="year_map">
+            <option selected disabled="true">Choose Year</option>
+            {% for i in labels %}
+            <option value="{{i}}" {% if i == year_map %}selected{% endif %}>{{i}}</option>
+            {% endfor %}
+          </select>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit">Apply</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div id="map"></div>
+</div>
+{% comment %} Table {% endcomment %}
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Carbon Price Data</h5>
+    <form  action="economic_forecast" method="POST" enctype="multipart/form-data>">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="input-group">
+          <!-- Scenario Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="scenarioDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Scenario
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="scenarioDropdown">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllScenarios">
+                  <label class="form-check-label" for="selectAllScenarios">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in scenarios %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox" type="checkbox" value="{{ i.scenario }}" name="scenario_table" id="scenario-{{ forloop.counter }}" {% if i.scenario in scenario_table %}checked{% endif %}>
+                  <label class="form-check-label" for="scenario-{{ forloop.counter }}">{{ i.scenario }}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+    
+          <!-- Region Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="regionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Region
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="regionDropdown">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllRegions">
+                  <label class="form-check-label" for="selectAllRegions">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in region_category %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox" type="checkbox" value="{{ i.region_category }}" name="region_table" id="region-category-{{ forloop.counter }}" {% if i.region_category in region_table %}checked{% endif %}>
+                  <label class="form-check-label" for="region-category-{{ forloop.counter }}">{{ i.region_category }}</label>
+                </div>
+              </li>
+              {% endfor %}
+              <li><hr class="dropdown-divider"></li>
+              {% for i in region %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox" type="checkbox" value="{{ i.region }}" name="region_table" id="region-{{ forloop.counter }}" {% if i.region in region_table %}checked{% endif %}>
+                  <label class="form-check-label" for="region-{{ forloop.counter }}">{{ i.region }}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+    
+          <!-- Year Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle" type="button" id="yearDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              Choose Year
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="yearDropdown">
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input select-all" type="checkbox" id="selectAllYears">
+                  <label class="form-check-label" for="selectAllYears">Select All</label>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              {% for i in labels %}
+              <li class="dropdown-item">
+                <div class="form-check">
+                  <input class="form-check-input option-checkbox" type="checkbox" value="{{ i }}" name="year_table" id="year-{{ forloop.counter }}" {% if i in year_table %}checked{% endif %}>
+                  <label class="form-check-label" for="year-{{ forloop.counter }}">{{ i }}</label>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+    
+          <!-- Apply Button -->
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit">Apply</button>
+            <button type="submit" name="export" class="btn btn-outline-secondary">Download Data</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="table-responsive">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Scenario</th>
+        <th scope="col">Region Category</th>
+        <th scope="col">Region</th>
+        <th scope="col">Unit</th>
+        {% for i in year_table %}
+        <th scope="col">{{i}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in corban_pricing_data_table %}
+      <tr>
+        <th scope="row">{{i.srno}}</th>
+        <td>{{i.scenario}}</td>
+        <td>{{i.region_category}}</td>
+        <td>{{i.region}}</td>
+        <td>{{i.unit}}</td>
+        {% for j in i.year%}
+        <td>{{j}}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+
+{% endblock %}
+{% block extrajs %}
+<script>
+
+    function mapfunction(){
+      // Initialize the map
+
+        var map = L.map('map').setView([20, 0], 2);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Get GeoJSON data from the context passed by Django
+        var geojsonData = {{ geojson_data|safe }};
+
+        // Define color scale
+        function getColor(price) {
+            return price > 700 ? '#800026' :
+                   price > 500 ? '#BD0026' :
+                   price > 300 ? '#E31A1C' :
+                   price > 100 ? '#FC4E2A' :
+                   price > 0 ? '#FEB24C' :
+                               '#FFEDA0';
+        }
+
+        // Add GeoJSON layer to the map
+        L.geoJson(geojsonData, {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: getColor(feature.properties.price_2100),
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(
+                    `<strong>${feature.properties.region}</strong><br>` +
+                    `Scenario: ${feature.properties.scenario}<br>` +
+                    `billion US$ ${feature.properties.year_label}: ${feature.properties.price_2100}/year`
+                );
+            }
+        }).addTo(map);
+      }
+
+function overallchart() {
+// For the first chart
+var ctx = document.getElementById("firstchart").getContext("2d");
+var gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+gradientStroke.addColorStop(1, 'rgba(72,72,176,0.2)');
+gradientStroke.addColorStop(0.2, 'rgba(72,72,176,0.0)');
+gradientStroke.addColorStop(0, 'rgba(119,52,169,0)'); 
+
+const labels = {{ labels_chart|safe }}; 
+const datasets = {{ datasets|safe }};  
+
+var chartDatasets = [];
+
+datasets.forEach(function(dataset, index) {
+  let gradient;
+  if (index % 2 === 0) {
+      gradient = gradientStroke; 
+  } else {
+      gradient = ctx.createLinearGradient(0, 230, 0, 50);  
+      gradient.addColorStop(1, 'rgba(0,255,0,0.2)');
+      gradient.addColorStop(0.2, 'rgba(0,255,0,0.0)');
+      gradient.addColorStop(0, 'rgba(0,255,0,0)');
+  }
+
+  chartDatasets.push({
+      label: dataset.label, 
+      fill: true,
+      backgroundColor: gradient,
+      borderColor: dataset.borderColor || '#d048b6',  
+      borderWidth: 2,
+      pointBackgroundColor: dataset.pointBackgroundColor || '#d048b6',
+      pointBorderColor: 'rgba(255,255,255,0)',
+      pointHoverBackgroundColor: dataset.pointHoverBackgroundColor || '#d048b6',
+      pointRadius: 2,
+      data: dataset.data, 
+  });
+});
+
+var data = {
+  labels: labels,
+  datasets: chartDatasets 
+};
+
+var myChart = new Chart(ctx, {
+  type: 'line',
+  data: data,
+  options: {
+    responsive: true,
+    plugins: {
+        legend: {
+            display: true,
+            position: 'top'
+        }
+    },
+    scales: {
+        x: {
+            title: {
+                display: true,
+                text: 'Years'
+            }
+        },y: {
+          title: {
+              display: true,
+              text: 'billion US$/yr'
+          }
+      }
+  }
+}
+});
+}
+
+function topbottom() {
+  // For the first chart
+  var ctx = document.getElementById("topbottom1").getContext("2d");
+  var gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+  gradientStroke.addColorStop(1, 'rgba(72,72,176,0.2)');
+  gradientStroke.addColorStop(0.2, 'rgba(72,72,176,0.0)');
+  gradientStroke.addColorStop(0, 'rgba(119,52,169,0)'); 
+  
+  const labels = {{ labels|safe }}; 
+  const datasets = {{ topbottom_datasets|safe }};  
+  
+  var chartDatasets = [];
+  
+  datasets.forEach(function(dataset, index) {
+    let gradient;
+    if (index % 2 === 0) {
+        gradient = gradientStroke; 
+    } else {
+        gradient = ctx.createLinearGradient(0, 230, 0, 50);  
+        gradient.addColorStop(1, 'rgba(0,255,0,0.2)');
+        gradient.addColorStop(0.2, 'rgba(0,255,0,0.0)');
+        gradient.addColorStop(0, 'rgba(0,255,0,0)');
+    }
+  
+    chartDatasets.push({
+        label: dataset.label, 
+        fill: true,
+        backgroundColor: gradient,
+        borderColor: dataset.borderColor || '#d048b6',  
+        borderWidth: 2,
+        pointBackgroundColor: dataset.pointBackgroundColor || '#d048b6',
+        pointBorderColor: 'rgba(255,255,255,0)',
+        pointHoverBackgroundColor: dataset.pointHoverBackgroundColor || '#d048b6',
+        pointRadius: 2,
+        data: dataset.data, 
+    });
+  });
+  
+  var data = {
+    labels: labels,
+    datasets: chartDatasets 
+  };
+  
+  var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: {
+      responsive: true,
+      plugins: {
+          legend: {
+              display: true,
+              position: 'top'
+          }
+      },
+      scales: {
+          x: {
+              title: {
+                  display: true,
+                  text: 'Years'
+              }
+          },y: {
+            title: {
+                display: true,
+                text: 'billion US$/yr'
+            }
+        }
+    }
+  }
+  });
+  }
+  function comparison_chart() {
+    // Get the chart context
+    var ctx = document.getElementById("comparison_chart").getContext("2d");
+
+    // Define a gradient for the bars
+    var gradientStroke = ctx.createLinearGradient(0, 230, 0, 50);
+    gradientStroke.addColorStop(1, 'rgba(72,72,176,0.2)');
+    gradientStroke.addColorStop(0.2, 'rgba(72,72,176,0.0)');
+    gradientStroke.addColorStop(0, 'rgba(119,52,169,0)');
+
+    // Define the labels and datasets
+    const labels = {{comparison_labels |safe }}; // Two labels
+    const dataPoints = {{comparison_datasets |safe }}; // Two data points
+
+    // Configure the dataset
+    var dataset = {
+        label: "Comparison Data",
+        fill: true,
+        backgroundColor: gradientStroke,
+        borderColor: '#d048b6',
+        borderWidth: 2,
+        pointBackgroundColor: '#d048b6',
+        pointBorderColor: 'rgba(203, 37, 37, 0)',
+        pointHoverBackgroundColor: '#d048b6',
+        pointRadius: 4,
+        data: dataPoints, // Two data points
+    };
+
+    // Configure the chart data
+    var data = {
+        labels: labels, // Two labels
+        datasets: [dataset]
+    };
+
+    // Create the chart
+    var myChart = new Chart(ctx, {
+        type: 'bar', // Bar chart type
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Labels',
+                    },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Values',
+                    },
+                },
+            },
+        },
+    });
+}
+  document.addEventListener("DOMContentLoaded", function () {
+    mapfunction();
+    overallchart();
+    topbottom();
+    comparison_chart();
+});
+function showForm(option) {
+  // Hide all forms
+  const forms = document.querySelectorAll('.form-container');
+  forms.forEach(form => form.style.display = 'none');
+
+  // Show the selected form
+  const selectedForm = document.getElementById(`form${option}`);
+  if (selectedForm) {
+      selectedForm.style.display = 'block';
+  }
+}
+
+window.onload = function() {
+  // Check if any radio button is selected by default
+  var selectedRadioButton = document.querySelector('input[name="option"]:checked');
+  if (selectedRadioButton) {
+      // Call the showForm function for the selected option
+      showForm(selectedRadioButton.value);
+  }
+};
+</script>
+
+
+{% endblock extrajs %}
